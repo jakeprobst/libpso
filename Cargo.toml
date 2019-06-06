@@ -5,3 +5,4 @@ authors = ["Jake Probst <jake.probst@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+psopacket = { path = "psopacket" }
