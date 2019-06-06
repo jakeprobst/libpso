@@ -177,7 +177,6 @@ pub fn pso_packet(attr: TokenStream, item: TokenStream) -> TokenStream {
     let psopacket = quote! {
         impl PSOPacket for #this_struct {
             fn from_bytes(data: &Vec<u8>) -> Result<#this_struct, PacketParseError> {
-                // TODO: assert cmd is correct
                 let mut cur = std::io::Cursor::new(data);
                 cur.seek(SeekFrom::Start(2));
                 let mut b: [u8; 2] = [0; 2];
