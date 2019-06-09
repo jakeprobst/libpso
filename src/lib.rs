@@ -1,3 +1,4 @@
+mod crypto;
 mod patch;
 
 #[derive(Debug, PartialEq)]
