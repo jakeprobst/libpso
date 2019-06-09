@@ -3,10 +3,12 @@ use crate::{PSOPacket, PacketParseError};
 
 use std::io::{Read, Seek, SeekFrom};
 
+#[allow(non_camel_case_types)]
+type u8_str = u8;
 
 #[pso_packet(0x02)]
-struct PatchWelcome {
-    copyright: [u8; 44],
+pub struct PatchWelcome {
+    copyright: [u8_str; 44],
     padding: [u8; 20],
     server_key: u32,
     client_key: u32,
@@ -23,9 +25,10 @@ impl PatchWelcome {
     }
 }
 
-enum PatchPackets {
-    PatchWelcome(PatchWelcome)
+pub enum PatchPacket {
+    PatchWelcome(PatchWelcome),
 }
+ 
 
 #[cfg(test)]
 mod tests {
@@ -53,6 +56,9 @@ mod tests {
             padding: [0; 20],
             server_key: 123,
             client_key: 456,
-        }))
+        }));
+        if let Ok(p) = new_pkt {
+            println!("{:?}", p);
+        }
     }
 }

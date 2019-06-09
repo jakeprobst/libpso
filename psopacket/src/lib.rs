@@ -37,17 +37,35 @@ pub fn pso_packet(attr: TokenStream, item: TokenStream) -> TokenStream {
                     };
                     match *arr.elem {
                         syn::Type::Path(ref path) => {
-                            dbg_write_vars.push(quote! {
-                                write!(f, "    {}: {:?}\n", #ident_str, self.#ident.iter()).unwrap();
-                            });
+                            let ty = path.path.segments[0].ident.to_string();
+                            if ty.as_str() == "u8_str" {
+                                dbg_write_vars.push(quote! {
+                                    match std::str::from_utf8(&self.#ident) {
+                                        Ok(v) => write!(f, "    {}: {:?}\n", #ident_str, v).unwrap(),
+                                        Err(_) => write!(f, "    {}: {:?}\n", #ident_str, self.#ident.iter()).unwrap()
+                                    }
+                                });
+                            }
+                            else {
+                                dbg_write_vars.push(quote! {
+                                    write!(f, "    {}: {:?}\n", #ident_str, self.#ident.iter()).unwrap();
+                                });
+                            }
+                            //dbg_write_vars.push(quote! {
+                                //write!(f, "    {}: {:?}\n", #ident_str, self.#ident.iter()).unwrap();
+                                /*match std::str::from_utf8(&self.#ident) {
+                                    Ok(v) => write!(f, "    {}: {:?}\n", #ident_str, v).unwrap(),
+                                    Err(_) => write!(f, "    {}: {:?}\n", #ident_str, self.#ident.iter()).unwrap()
+                                }*/
+                                //write!(f, "    {}: {:?}\n", #ident_str, var_as_str).unwrap();
+                            //});
                             as_bytes.push(quote! {
                                 for f in self.#ident.iter() {
                                     buf.extend_from_slice(&f.to_le_bytes())
                                 }
                             });
-                            let ty = path.path.segments[0].ident.to_string();
                             match ty.as_str() {
-                                "u8" => {
+                                "u8" | "u8_str" => {
                                     from_bytes.push(quote! {
                                         #ident: {
                                             let mut b: [u8; #array_length] = [0; #array_length];
@@ -88,7 +106,7 @@ pub fn pso_packet(attr: TokenStream, item: TokenStream) -> TokenStream {
                     });
                     let ty = path.path.segments[0].ident.to_string();
                     match ty.as_str() {
-                        "u8" => {
+                        "u8" | "u8_str" => {
                             from_bytes.push(quote! {
                                 #ident: {
                                     let mut b: [u8; 1] = [0; 1];
@@ -178,9 +196,9 @@ pub fn pso_packet(attr: TokenStream, item: TokenStream) -> TokenStream {
         impl PSOPacket for #this_struct {
             fn from_bytes(data: &Vec<u8>) -> Result<#this_struct, PacketParseError> {
                 let mut cur = std::io::Cursor::new(data);
-                cur.seek(SeekFrom::Start(2));
+                cur.seek(SeekFrom::Start(2)).unwrap();
                 let mut b: [u8; 2] = [0; 2];
-                cur.read(&mut b);
+                cur.read(&mut b).unwrap();
                 let cmd = u16::from_le_bytes(b);
 
                 if cmd != #pkt_cmd {
@@ -188,10 +206,10 @@ pub fn pso_packet(attr: TokenStream, item: TokenStream) -> TokenStream {
                 }
                 
                 if #has_flag {
-                    cur.seek(SeekFrom::Start(4));
+                    cur.seek(SeekFrom::Start(4)).unwrap();
                 }
                 else {
-                    cur.seek(SeekFrom::Start(8));
+                    cur.seek(SeekFrom::Start(8)).unwrap();
                 }
                 Ok(#this_struct {
                     #(#from_bytes)*
