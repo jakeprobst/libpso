@@ -6,6 +6,7 @@ use std::io::{Read, Seek, SeekFrom};
 #[allow(non_camel_case_types)]
 type u8_str = u8;
 
+// outgoing packets
 #[pso_packet(0x02)]
 pub struct PatchWelcome {
     copyright: [u8_str; 44],
@@ -15,7 +16,7 @@ pub struct PatchWelcome {
 }
 
 impl PatchWelcome {
-    fn new(server_key: u32, client_key: u32) -> PatchWelcome {
+    pub fn new(server_key: u32, client_key: u32) -> PatchWelcome {
         PatchWelcome {
             copyright: b"Patch Server. Copyright SonicTeam, LTD. 2001".clone(),
             padding: [0; 20],
@@ -25,9 +26,14 @@ impl PatchWelcome {
     }
 }
 
-pub enum PatchPacket {
-    PatchWelcome(PatchWelcome),
+
+// incoming packets
+#[pso_packet(0x02)]
+pub struct PatchWelcomeReply {
+
 }
+
+
  
 
 #[cfg(test)]
@@ -38,7 +44,7 @@ mod tests {
 
         let pkt = super::PatchWelcome::new(123, 456);
 
-        assert!(pkt.as_bytes() == vec![0x4C, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x50, 0x61, 0x74, 0x63, 0x68, 0x20, 0x53, 0x65,
+        assert!(pkt.as_bytes() == vec![0x4C, 0x00, 0x02, 0x00, 0x50, 0x61, 0x74, 0x63, 0x68, 0x20, 0x53, 0x65,
                                        0x72, 0x76, 0x65, 0x72, 0x2E, 0x20, 0x43, 0x6F, 0x70, 0x79, 0x72, 0x69, 0x67, 0x68, 0x74, 0x20,
                                        0x53, 0x6F, 0x6E, 0x69, 0x63, 0x54, 0x65, 0x61, 0x6D, 0x2C, 0x20, 0x4C, 0x54, 0x44, 0x2E, 0x20,
                                        0x32, 0x30, 0x30, 0x31, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -47,7 +53,7 @@ mod tests {
 
 
         let mut bytes = pkt.as_bytes();
-        bytes.splice(32..41, b"Elsewhere".iter().cloned());
+        bytes.splice(28..37, b"Elsewhere".iter().cloned());
 
         let new_pkt = super::PatchWelcome::from_bytes(&bytes);
 

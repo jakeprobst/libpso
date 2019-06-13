@@ -10,10 +10,9 @@ use quote::quote;
 pub fn pso_packet(attr: TokenStream, item: TokenStream) -> TokenStream {
     let arg = parse_macro_input!(attr as syn::LitInt);
     let pkt_cmd = arg.value() as u16;
-    
+
     let parsed = parse_macro_input!(item as ItemStruct);
 
-    let mut has_flag: bool = false;
     let mut from_bytes = Vec::new();
     let mut as_bytes = Vec::new();
     let mut dbg_write_vars = Vec::new();
@@ -139,13 +138,6 @@ pub fn pso_packet(attr: TokenStream, item: TokenStream) -> TokenStream {
                             });
                         },
                         "u32" => {
-                            if ident_str == "flag" {
-                                if i != 0 {
-                                    return syn::Error::new(ident.span(), "flag must be first member of struct").to_compile_error().into();
-                                }
-                                has_flag = true;
-                                continue;
-                            }
                             from_bytes.push(quote! {
                                 #ident: {
                                     let mut b: [u8; 4] = [0; 4];
@@ -181,17 +173,6 @@ pub fn pso_packet(attr: TokenStream, item: TokenStream) -> TokenStream {
     let this_struct = parsed.ident.clone();
     let this_struct_str = this_struct.to_string();
 
-    let flag_write = if has_flag {
-        quote! {
-            buf.extend_from_slice(&u32::to_le_bytes(self.flag));
-        }
-    }
-    else {
-        quote! {
-            buf.extend_from_slice(&u32::to_le_bytes(0));
-        }
-    };
-
     let psopacket = quote! {
         impl PSOPacket for #this_struct {
             fn from_bytes(data: &Vec<u8>) -> Result<#this_struct, PacketParseError> {
@@ -205,22 +186,15 @@ pub fn pso_packet(attr: TokenStream, item: TokenStream) -> TokenStream {
                     return Err(PacketParseError::WrongPacketCommand);
                 }
                 
-                if #has_flag {
-                    cur.seek(SeekFrom::Start(4)).unwrap();
-                }
-                else {
-                    cur.seek(SeekFrom::Start(8)).unwrap();
-                }
                 Ok(#this_struct {
                     #(#from_bytes)*
                 })
             }
             fn as_bytes(&self) -> Vec<u8> {
                 let mut buf: Vec<u8> = Vec::new();
-                #flag_write
                 #(#as_bytes)*
 
-                let pkt_len = buf.len() as u16;
+                let pkt_len = (buf.len() + 4) as u16;
                 let mut prebuf: Vec<u8> = Vec::new();
 
                 prebuf.extend_from_slice(&u16::to_le_bytes(pkt_len));
