@@ -18,7 +18,7 @@ pub fn pso_packet(attr: TokenStream, item: TokenStream) -> TokenStream {
     let mut dbg_write_vars = Vec::new();
     let mut partialeq = Vec::new();
     
-    for (i, f) in parsed.fields.iter().enumerate() {
+    for f in parsed.fields.iter() {
         if let Some(ident) = &f.ident {
             let ident_str = ident.to_string();
 
