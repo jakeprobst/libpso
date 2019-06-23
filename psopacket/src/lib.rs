@@ -100,10 +100,26 @@ pub fn pso_packet(attr: TokenStream, item: TokenStream) -> TokenStream {
                     dbg_write_vars.push(quote! {
                         write!(f, "    {}: {:?}\n", #ident_str, self.#ident).unwrap();
                     });
-                    as_bytes.push(quote! {
-                        buf.extend_from_slice(&self.#ident.to_le_bytes());
-                    });
                     let ty = path.path.segments[0].ident.to_string();
+
+                    // as_bytes
+                    match ty.as_str() {
+                        "String" => {
+                            as_bytes.push(quote! {
+                                for c in self.#ident.as_str().encode_utf16() {
+                                    buf.extend_from_slice(&c.to_le_bytes());
+                                }
+                                //buf.extend_from_slice(&self.#ident.as_str().encode_utf16());
+                            });
+                        }
+                        _ => {
+                            as_bytes.push(quote! {
+                                buf.extend_from_slice(&self.#ident.to_le_bytes());
+                            });
+                        }
+                    }
+
+                    // from_bytes
                     match ty.as_str() {
                         "u8" | "u8_str" => {
                             from_bytes.push(quote! {
@@ -150,6 +166,19 @@ pub fn pso_packet(attr: TokenStream, item: TokenStream) -> TokenStream {
                                         return Err(PacketParseError::NotEnoughBytes);
                                     };
                                     u32::from_le_bytes(b)
+                                },
+                            });
+                        },
+                        "String" => {
+                            from_bytes.push(quote! {
+                                #ident: {
+                                    let mut s = String::new();
+                                    if let Ok(len) = cur.read_to_string(&mut s) {
+                                    }
+                                    else {
+                                        return Err(PacketParseError::NotEnoughBytes);
+                                    };
+                                    s
                                 },
                             });
                         },
