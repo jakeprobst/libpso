@@ -6,7 +6,7 @@ use std::num::Wrapping as W;
 
 const PC_STREAM_LENGTH: usize = 57;
 
-struct PSOPCCipher {
+pub struct PSOPCCipher {
   stream: [u32; PC_STREAM_LENGTH],
   offset: u16,
 }
