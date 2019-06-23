@@ -206,18 +206,29 @@ pub fn pso_packet(attr: TokenStream, item: TokenStream) -> TokenStream {
         impl PSOPacket for #this_struct {
             fn from_bytes(data: &Vec<u8>) -> Result<#this_struct, PacketParseError> {
                 let mut cur = std::io::Cursor::new(data);
-                cur.seek(SeekFrom::Start(2)).unwrap();
                 let mut b: [u8; 2] = [0; 2];
+                cur.read(&mut b).unwrap();
+                let len = u16::from_le_bytes(b);
                 cur.read(&mut b).unwrap();
                 let cmd = u16::from_le_bytes(b);
 
                 if cmd != #pkt_cmd {
                     return Err(PacketParseError::WrongPacketCommand);
                 }
+
+                if len as usize != data.len() {
+                    return Err(PacketParseError::WrongPacketSize(len, data.len()));
+                }
                 
-                Ok(#this_struct {
+                let result = Ok(#this_struct {
                     #(#from_bytes)*
-                })
+                });
+
+                if cur.position() as usize != data.len() {
+                    return Err(PacketParseError::DataStructNotLargeEnough(cur.position(), data.len()));
+                }
+
+                result
             }
             fn as_bytes(&self) -> Vec<u8> {
                 let mut buf: Vec<u8> = Vec::new();
