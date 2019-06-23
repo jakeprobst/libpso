@@ -1,4 +1,4 @@
-mod pc;
+pub mod pc;
 
 
 #[derive(Debug)]
@@ -8,7 +8,22 @@ pub enum CipherError {
 
 
 
-trait PSOCipher {
+pub trait PSOCipher {
     fn encrypt(&mut self, data: &Vec<u8>) -> Result<Vec<u8>, CipherError>;
     fn decrypt(&mut self, data: &Vec<u8>) -> Result<Vec<u8>, CipherError>;
+}
+
+
+
+pub struct NullCipher {
+}
+
+impl PSOCipher for NullCipher {
+    fn encrypt(&mut self, data: &Vec<u8>) -> Result<Vec<u8>, CipherError> {
+        Ok(data.clone())
+    }
+
+    fn decrypt(&mut self, data: &Vec<u8>) -> Result<Vec<u8>, CipherError> {
+        Ok(data.clone())
+    }
 }
