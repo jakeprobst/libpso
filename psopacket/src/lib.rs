@@ -234,6 +234,10 @@ pub fn pso_packet(attr: TokenStream, item: TokenStream) -> TokenStream {
                 let mut buf: Vec<u8> = Vec::new();
                 #(#as_bytes)*
 
+                while buf.len() % 4 != 0 {
+                    buf.push(0);
+                }
+
                 let pkt_len = (buf.len() + 4) as u16;
                 let mut prebuf: Vec<u8> = Vec::new();
 
