@@ -30,11 +30,114 @@ impl PatchWelcome {
 // incoming packets
 #[pso_packet(0x02)]
 pub struct PatchWelcomeReply {
+}
 
+#[pso_packet(0x04)]
+pub struct RequestLogin {
+}
+
+#[pso_packet(0x04)]
+pub struct LoginReply {
+    unused: [u8; 12],
+    username: [u8_str; 16],
+    password: [u8_str; 16],
+    unused2: [u8; 64],
+}
+
+#[pso_packet(0x0B)]
+pub struct PatchStartList {
+}
+
+#[pso_packet(0x09)]
+pub struct ChangeDirectory {
+    dirname: [u8_str; 64]
+}
+
+impl ChangeDirectory {
+    pub fn new(dirname: &str) -> ChangeDirectory {
+        let mut d = [0u8; 64];
+        for (src, dst) in dirname.as_bytes().iter().zip(d.iter_mut()) {
+            *dst = *src
+        }
+        ChangeDirectory {
+            dirname: d,
+        }
+    }
+}
+
+#[pso_packet(0x0A)]
+pub struct UpOneDirectory {
+}
+
+#[pso_packet(0x0C)]
+pub struct FileInfo {
+    id: u32,
+    filename: [u8_str; 32],
+}
+
+impl FileInfo {
+    pub fn new(filename: &str, id: u32) -> FileInfo {
+        let mut f = [0u8; 32];
+        for (src, dst) in filename.as_bytes().iter().zip(f.iter_mut()) {
+            *dst = *src
+        };
+        FileInfo {
+            id: id,
+            filename: f,
+        }
+    }
 }
 
 
- 
+#[pso_packet(0x0D)]
+pub struct PatchEndList {
+}
+
+#[pso_packet(0x0F)]
+pub struct FileInfoReply {
+    id: u32,
+    checksum: u32,
+    size: u32,
+}
+
+
+#[pso_packet(0x12)]
+pub struct EndIt {
+}
+
+
+#[pso_packet(0x13)]
+pub struct Message {
+    msg: String,
+}
+
+impl Message {
+    pub fn new(mut msg: String) -> Message {
+        msg.push('\0');
+        Message {
+            msg: msg,
+        }
+    }
+}
+
+
+#[pso_packet(0x14)]
+pub struct RedirectClient {
+    ip: u32,
+    port: u16,
+    padding: u16,
+}
+
+impl RedirectClient {
+    pub fn new(ip: u32, port: u16) -> RedirectClient {
+        RedirectClient {
+            ip: ip,
+            port: port,
+            padding: 0,
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -66,5 +169,33 @@ mod tests {
         if let Ok(p) = new_pkt {
             println!("{:?}", p);
         }
+    }
+
+    #[test]
+    fn test_message() {
+        use super::PSOPacket;
+
+        let msg = super::Message::new("hello this is an arbitrary message?!!".to_string());
+
+        assert!(msg.as_bytes() == vec![0x50, 0x00, 0x13, 0x00, 0x68, 0x00, 0x65, 0x00, 0x6C, 0x00, 0x6C, 0x00, 0x6F, 0x00, 0x20, 0x00,
+                                       0x74, 0x00, 0x68, 0x00, 0x69, 0x00, 0x73, 0x00, 0x20, 0x00, 0x69, 0x00, 0x73, 0x00, 0x20, 0x00,
+                                       0x61, 0x00, 0x6E, 0x00, 0x20, 0x00, 0x61, 0x00, 0x72, 0x00, 0x62, 0x00, 0x69, 0x00, 0x74, 0x00,
+                                       0x72, 0x00, 0x61, 0x00, 0x72, 0x00, 0x79, 0x00, 0x20, 0x00, 0x6D, 0x00, 0x65, 0x00, 0x73, 0x00,
+                                       0x73, 0x00, 0x61, 0x00, 0x67, 0x00, 0x65, 0x00, 0x3F, 0x00, 0x21, 0x00, 0x21, 0x00, 0x00, 0x00]);
+
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(&70u16.to_le_bytes());
+        bytes.extend_from_slice(&19u16.to_le_bytes());
+        for c in "this is a cool string of letters!".encode_utf16() {
+            bytes.extend_from_slice(&c.to_le_bytes());
+        }
+
+        let msg = super::Message::from_bytes(&bytes);
+        let b = msg.unwrap().as_bytes();
+        assert!(b == vec![0x48, 0x00, 0x13, 0x00, 0x74, 0x00, 0x68, 0x00, 0x69, 0x00, 0x73, 0x00, 0x20, 0x00, 0x69, 0x00,
+                          0x73, 0x00, 0x20, 0x00, 0x61, 0x00, 0x20, 0x00, 0x63, 0x00, 0x6F, 0x00, 0x6F, 0x00, 0x6C, 0x00,
+                          0x20, 0x00, 0x73, 0x00, 0x74, 0x00, 0x72, 0x00, 0x69, 0x00, 0x6E, 0x00, 0x67, 0x00, 0x20, 0x00,
+                          0x6F, 0x00, 0x66, 0x00, 0x20, 0x00, 0x6C, 0x00, 0x65, 0x00, 0x74, 0x00, 0x74, 0x00, 0x65, 0x00,
+                          0x72, 0x00, 0x73, 0x00, 0x21, 0x00, 0x00, 0x00])
     }
 }
