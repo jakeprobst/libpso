@@ -172,13 +172,17 @@ pub fn pso_packet(attr: TokenStream, item: TokenStream) -> TokenStream {
                         "String" => {
                             from_bytes.push(quote! {
                                 #ident: {
-                                    let mut s = String::new();
-                                    if let Ok(len) = cur.read_to_string(&mut s) {
+                                    let mut s: Vec<u8> = Vec::new();
+                                    if let Ok(len) = cur.read_to_end(&mut s) {
                                     }
                                     else {
                                         return Err(PacketParseError::NotEnoughBytes);
                                     };
-                                    s
+                                    let mut utf16 = Vec::new();
+                                    for c in s.chunks(2) {
+                                        utf16.push(u16::from_le_bytes([c[0], c[1]]));
+                                    }
+                                    String::from_utf16_lossy(utf16.as_slice())
                                 },
                             });
                         },
