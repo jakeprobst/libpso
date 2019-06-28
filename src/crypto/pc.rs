@@ -82,7 +82,7 @@ impl PSOPCCipher {
     }
 
     fn next(&mut self) -> u32 {
-        if self.offset as usize == PC_STREAM_LENGTH {
+        if self.offset as usize == PC_STREAM_LENGTH - 1 {
             self.update_stream();
             self.offset = 1;
         }
