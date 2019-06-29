@@ -3,6 +3,8 @@ use crate::{PSOPacket, PacketParseError};
 
 use std::io::{Read, Seek, SeekFrom};
 
+pub const PATCH_FILE_CHUNK_SIZE: u16 = 0x8000; // 32kb
+
 #[allow(non_camel_case_types)]
 type u8_str = u8;
 
@@ -43,6 +45,93 @@ pub struct LoginReply {
     password: [u8_str; 16],
     unused2: [u8; 64],
 }
+
+#[pso_packet(0x06)]
+pub struct StartFileSend {
+    id: u32,
+    size: u32,
+    filename: [u8_str; 48],
+}
+
+impl StartFileSend {
+    pub fn new(filename: &str, size: u32, id: u32) -> StartFileSend {
+        let mut f = [0u8; 48];
+        for (src, dst) in filename.as_bytes().iter().zip(f.iter_mut()) {
+            *dst = *src
+        }
+        StartFileSend {
+            id: id,
+            size: size,
+            filename: f,
+        }
+    }
+}
+
+//#[pso_packet(0x07)]
+pub struct FileSend {
+    pub chunk_num: u32,
+    pub checksum: u32,
+    pub chunk_size: u32,
+    pub buffer: [u8; PATCH_FILE_CHUNK_SIZE as usize],
+}
+
+impl PSOPacket for FileSend {
+    fn from_bytes(_data: &Vec<u8>) -> Result<FileSend, PacketParseError> {
+        // TODO: implement this? it shouldn't be called on the server side ever...
+        unimplemented!();
+    }
+
+    fn as_bytes(&self) -> Vec<u8> {
+        let mut buf: Vec<u8> = Vec::new();
+        buf.extend_from_slice(&u32::to_le_bytes(self.chunk_num));
+        buf.extend_from_slice(&u32::to_le_bytes(self.checksum));
+        buf.extend_from_slice(&u32::to_le_bytes(self.chunk_size));
+        buf.extend_from_slice(&self.buffer[0..self.chunk_size as usize]);
+        while buf.len() % 4 != 0 {
+            buf.push(0);
+        }
+        //buf
+
+        //buf.extend_from_slice(&u16::to_le_bytes((4 * 4) as u16 + self.chunk_size as u16));
+        //buf.extend_from_slice(&u16::to_le_bytes(0x07));
+        let pkt_len = (buf.len() + 4) as u16;
+        let mut prebuf: Vec<u8> = Vec::new();
+
+        prebuf.extend_from_slice(&u16::to_le_bytes(pkt_len));
+        prebuf.extend_from_slice(&u16::to_le_bytes(0x07));
+        prebuf.append(&mut buf);
+
+        prebuf
+
+    }
+}
+
+impl std::fmt::Debug for FileSend {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "packet FileSend {{\n").unwrap();
+        write!(f, "    chunk_num: {:?}\n", self.chunk_num).unwrap();
+        write!(f, "    checksum: {:X?}\n", self.checksum).unwrap();
+        write!(f, "    chunk_size: {:X?}\n", self.chunk_size).unwrap();
+        write!(f, "    buffer: [...a large array ...]\n").unwrap();
+        write!(f, "}}")
+    }
+}
+
+
+#[pso_packet(0x08)]
+pub struct EndFileSend {
+    padding: u32,
+}
+
+impl EndFileSend {
+    pub fn new() -> EndFileSend {
+        EndFileSend {
+            padding: 0,
+        }
+    }
+}
+
+
 
 #[pso_packet(0x0B)]
 pub struct PatchStartList {
@@ -95,14 +184,33 @@ pub struct PatchEndList {
 
 #[pso_packet(0x0F)]
 pub struct FileInfoReply {
-    id: u32,
-    checksum: u32,
-    size: u32,
+    pub id: u32,
+    pub checksum: u32,
+    pub size: u32,
+}
+
+#[pso_packet(0x10)]
+pub struct FileInfoListEnd {
+}
+
+#[pso_packet(0x11)]
+pub struct FilesToPatchMetadata {
+    data_size: u32,
+    file_count: u32,
+}
+
+impl FilesToPatchMetadata {
+    pub fn new(data_size: u32, file_count: u32) -> FilesToPatchMetadata {
+        FilesToPatchMetadata {
+            data_size: data_size,
+            file_count: file_count,
+        }
+    }
 }
 
 
 #[pso_packet(0x12)]
-pub struct EndIt {
+pub struct FinalizePatching {
 }
 
 
