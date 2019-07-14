@@ -41,13 +41,13 @@ pub fn pso_packet(attr: TokenStream, item: TokenStream) -> TokenStream {
                                 dbg_write_vars.push(quote! {
                                     match std::str::from_utf8(&self.#ident) {
                                         Ok(v) => write!(f, "    {}: {:?}\n", #ident_str, v).unwrap(),
-                                        Err(_) => write!(f, "    {}: {:?}\n", #ident_str, self.#ident.iter()).unwrap()
+                                        Err(_) => write!(f, "    {}: {:?}\n", #ident_str, self.#ident.to_vec()).unwrap()
                                     }
                                 });
                             }
                             else {
                                 dbg_write_vars.push(quote! {
-                                    write!(f, "    {}: {:?}\n", #ident_str, self.#ident.iter()).unwrap();
+                                    write!(f, "    {}: {:?}\n", #ident_str, self.#ident.to_vec()).unwrap();
                                 });
                             }
                             //dbg_write_vars.push(quote! {
