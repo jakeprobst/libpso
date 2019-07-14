@@ -11,6 +11,7 @@ pub enum CipherError {
 pub trait PSOCipher {
     fn encrypt(&mut self, data: &Vec<u8>) -> Result<Vec<u8>, CipherError>;
     fn decrypt(&mut self, data: &Vec<u8>) -> Result<Vec<u8>, CipherError>;
+    fn header_size(&self) -> usize;
 }
 
 
@@ -25,5 +26,9 @@ impl PSOCipher for NullCipher {
 
     fn decrypt(&mut self, data: &Vec<u8>) -> Result<Vec<u8>, CipherError> {
         Ok(data.clone())
+    }
+
+    fn header_size(&self) -> usize {
+        4
     }
 }

@@ -111,6 +111,10 @@ impl PSOCipher for PSOPCCipher {
     fn decrypt(&mut self, data: &Vec<u8>) -> Result<Vec<u8>, CipherError> {
         self.encrypt(data)
     }
+
+    fn header_size(&self) -> usize {
+        4
+    }
 }
 
 
