@@ -1,5 +1,5 @@
 pub mod crypto;
-pub mod patch;
+pub mod packet;
 
 #[derive(Debug, PartialEq)]
 pub enum PacketParseError {
