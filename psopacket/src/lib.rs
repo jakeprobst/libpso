@@ -1,4 +1,4 @@
-#![recursion_limit="128"]
+#![recursion_limit="256"]
 
 extern crate proc_macro;
 
@@ -276,6 +276,7 @@ pub fn pso_packet(attr: TokenStream, item: TokenStream) -> TokenStream {
     };
 
     let q = quote! {
+        #[derive(Clone)]
         #parsed
         #psopacket
         #psopacket_debug
