@@ -187,8 +187,22 @@ pub fn pso_packet(attr: TokenStream, item: TokenStream) -> TokenStream {
                             });
                         },
                         _ => {
-                            return syn::Error::new(path.path.segments[0].ident.span(), "type not supported")
-                                .to_compile_error().into();
+                            from_bytes.push(quote! {
+                                #ident: {
+                                    let mut b: [u8; #path::SIZE] = [0; #path::SIZE];
+                                    if let Ok(len) = cur.read(&mut b) {
+                                        if len != #path::SIZE {
+                                            return Err(PacketParseError::NotEnoughBytes);
+                                        }
+                                    }
+                                    else {
+                                        return Err(PacketParseError::NotEnoughBytes);
+                                    };
+                                    #path::from_le_bytes(b)?
+                                },
+                            });
+                            //return syn::Error::new(path.path.segments[0].ident.span(), "type not supported")
+                            //    .to_compile_error().into();
                         }
                     }
                     partialeq.push(quote! {
