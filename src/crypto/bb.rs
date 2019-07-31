@@ -86,13 +86,12 @@ impl PSOBBCipher {
 
 impl PSOCipher for PSOBBCipher {
     fn encrypt(&mut self, data: &Vec<u8>) -> Result<Vec<u8>, CipherError> {
-        if data.len() % 8 != 0 {
-            return Err(CipherError::InvalidSize);
-        }
-
-        let real_data = data.chunks(4).map(|k| {
+        let mut real_data = data.chunks(4).map(|k| {
             u32::from_le_bytes([k[0], k[1], k[2], k[3]])
         }).collect::<Vec<_>>();
+        if real_data.len() % 2 == 1 {
+            real_data.push(0);
+        }
 
         let mut result = Vec::new();
         for d in real_data.chunks(2) {
@@ -114,7 +113,6 @@ impl PSOCipher for PSOBBCipher {
             result.extend_from_slice(&l.to_le_bytes());
             result.extend_from_slice(&r.to_le_bytes());
         }
-
 
         Ok(result)
     }
@@ -182,15 +180,14 @@ mod tests {
         let mut cipher_out = PSOBBCipher::new(p, s, seed);
 
         for _ in 0..50 {
-            let len = (rng.gen::<u16>() / 8) * 8;
+            let len = (rng.gen::<u16>() / 4) * 4;
 
             let mut random_junk = vec![0u8; len as usize];
             rng.fill_bytes(&mut random_junk);
 
             let enc_data = cipher_in.encrypt(&random_junk).unwrap();
             let orig_data = cipher_out.decrypt(&enc_data).unwrap();
-
-            assert!(random_junk == orig_data);
+            assert!(random_junk == orig_data[..len as usize].to_vec());
         }
     }
 }
