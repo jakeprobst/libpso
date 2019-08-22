@@ -172,9 +172,9 @@ mod tests {
         };
 
         let mut bytes = pkt.as_bytes();
-        assert!(bytes[11] == 2);
+        assert!(bytes[8] == 2);
 
-        bytes[11] = 8;
+        bytes[8] = 8;
 
         let pkt = super::LoginResponse::from_bytes(&bytes).unwrap();
         assert!(pkt.status == super::AccountStatus::InvalidUser);
