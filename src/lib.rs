@@ -1,5 +1,6 @@
 pub mod crypto;
 pub mod packet;
+pub mod character;
 
 #[derive(Debug, PartialEq)]
 pub enum PacketParseError {
@@ -8,6 +9,7 @@ pub enum PacketParseError {
     WrongPacketForServerType,
     WrongPacketSize(u16, usize),
     DataStructNotLargeEnough(u64, usize),
+    InvalidValue,
 }
 
 
