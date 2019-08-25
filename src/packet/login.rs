@@ -135,6 +135,44 @@ pub struct RequestSettings {
     pub flag: u32
 }
 
+#[pso_packet(0xE2)]
+pub struct SendKeyAndTeamSettings {
+    flag: u32,
+    unknown: [u8; 0x114],
+    key_config: [u8; 0x16C],
+    joystick_config: [u8; 0x38],
+    guildcard: u32,
+    team_id: u32,
+    //team_info: [u32; 2],
+    team_info: [u8; 8],
+    team_priv: u16,
+    unknown2: u16,
+    //team_name: [u16; 16],
+    team_name: [u8; 32],
+    team_flag: [u8; 2048],
+    team_rewards: [u8; 8],
+}
+
+impl SendKeyAndTeamSettings {
+    pub fn new(key_config: [u8; 0x16C], joystick_config: [u8; 0x38], guildcard: u32, team_id: u32) -> SendKeyAndTeamSettings {
+        SendKeyAndTeamSettings {
+            flag: 0,
+            unknown: [0; 0x114],
+            key_config: key_config,
+            joystick_config: joystick_config,
+            guildcard: guildcard,
+            team_id: team_id,
+            //team_info: [0; 2],
+            team_info: [0; 8],
+            team_priv: 0,
+            unknown2: 0,
+            //team_name: [0; 16],
+            team_name: [0; 32],
+            team_flag: [0; 2048],
+            team_rewards: [0; 8]
+        }
+    }
+}
 
 #[pso_packet(0x19)]
 pub struct RedirectClient {
@@ -178,5 +216,25 @@ mod tests {
 
         let pkt = super::LoginResponse::from_bytes(&bytes).unwrap();
         assert!(pkt.status == super::AccountStatus::InvalidUser);
+    }
+
+    #[test]
+    fn test_key_settings_reply() {
+        use super::PSOPacket;
+        use rand::{Rng, RngCore};
+
+        let mut rng = rand::thread_rng();
+
+        let mut  key_config = [0u8; 0x16C];
+        let mut joystick_config = [0u8; 0x38];
+
+        rng.fill(&mut key_config[..]);
+        rng.fill(&mut joystick_config[..]);
+        let pkt = super::SendKeyAndTeamSettings::new(key_config, joystick_config, 123, 456);
+        let bytes = pkt.as_bytes();
+
+        assert!(bytes[2] == 0xe2);
+        assert!(bytes[8 + 0x114] == key_config[0]);
+        assert!(bytes[8 + 0x114 + 0x16C] == joystick_config[0]);
     }
 }
