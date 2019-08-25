@@ -37,12 +37,12 @@ pub struct Login {
     pub tag: u32,
     pub guildcard: u32,
     pub version: u16,
-    unknown1: [u8; 6],
+    pub unknown1: [u8; 6],
     pub team: u32,
     pub username: [u8_str; 16],
-    unknown2: [u8; 32],
+    pub unknown2: [u8; 32],
     pub password: [u8_str; 16],
-    unknown3: [u8; 40],
+    pub unknown3: [u8; 40],
     pub hwinfo: [u8; 8],
     pub security_data: [u8; 40],
 }
@@ -132,16 +132,16 @@ impl LoginResponse {
 
 #[pso_packet(0xE0)]
 pub struct RequestSettings {
-    flag: u32
+    pub flag: u32
 }
 
 
 #[pso_packet(0x19)]
 pub struct RedirectClient {
-    flag: u32,
-    ip: u32,
-    port: u16,
-    padding: u16,
+    pub flag: u32,
+    pub ip: u32,
+    pub port: u16,
+    pub padding: u16,
 }
 
 impl RedirectClient {
