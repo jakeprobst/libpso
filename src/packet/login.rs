@@ -193,6 +193,25 @@ impl RedirectClient {
     }
 }
 
+#[pso_packet(0x1E8)]
+pub struct BBChecksum {
+    pub flag: u32,
+}
+
+#[pso_packet(0x2E8)]
+pub struct BBChecksumAck {
+    pub flag: u32,
+    pub ack: u32,
+}
+
+impl BBChecksumAck {
+    pub fn new() -> BBChecksumAck {
+        BBChecksumAck {
+            flag: 0,
+            ack: 1,
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
