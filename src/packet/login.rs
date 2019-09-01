@@ -257,7 +257,7 @@ mod tests {
 
     #[test]
     fn test_login_checksum_ack() {
-        let mut checksum_ack = super::ChecksumAck::new(1);
-        assert!(u32::to_le_bytes(checksum_ack.ack) == [0x01, 0x00, 0x00, 0x00]);
+        let checksum_ack = super::ChecksumAck::new(1);
+        assert!(u32::as_bytes(checksum_ack.ack) == [0x00, 0x00, 0x00, 0x01]);
     }
 }
