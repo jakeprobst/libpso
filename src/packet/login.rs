@@ -29,8 +29,6 @@ impl LoginWelcome {
     }
 }
 
-
-
 #[pso_packet(0x93)]
 pub struct Login {
     pub flag: u32,
@@ -193,6 +191,25 @@ impl RedirectClient {
     }
 }
 
+#[pso_packet(0x1E8)]
+pub struct Checksum {
+    pub flag: u32,
+}
+
+#[pso_packet(0x2E8)]
+pub struct ChecksumAck {
+    pub flag: u32,
+    pub ack: u32,
+}
+
+impl ChecksumAck {
+    pub fn new(ack: u32) -> ChecksumAck {
+        ChecksumAck {
+            flag: 0,
+            ack: ack,
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -236,5 +253,12 @@ mod tests {
         assert!(bytes[2] == 0xe2);
         assert!(bytes[8 + 0x114] == key_config[0]);
         assert!(bytes[8 + 0x114 + 0x16C] == joystick_config[0]);
+    }
+
+    #[test]
+    fn test_login_checksum_ack() {
+        use super::PSOPacket;
+        let pkt = super::ChecksumAck::new(1);
+        assert!(pkt.as_bytes() == [0xC, 0, 0xE8, 0x02, 0,0,0,0, 1,0,0,0]);
     }
 }
