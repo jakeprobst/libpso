@@ -259,6 +259,6 @@ mod tests {
     fn test_login_checksum_ack() {
         use super::PSOPacket;
         let pkt = super::ChecksumAck::new(1);
-        assert!(pkt.as_bytes() == [0xC, 0, 0xE8, 0x01, 0,0,0,0, 1,0,0,0]);
+        assert!(pkt.as_bytes() == [0xC, 0, 0xE8, 0x02, 0,0,0,0, 1,0,0,0]);
     }
 }
