@@ -257,7 +257,8 @@ mod tests {
 
     #[test]
     fn test_login_checksum_ack() {
-        let checksum_ack = super::ChecksumAck::new(1);
-        assert!(u32::as_bytes(checksum_ack.ack) == [0x00, 0x00, 0x00, 0x01]);
+        use super::PSOPacket;
+        let pkt = super::ChecksumAck::new(1);
+        assert!(pkt.as_bytes() == [0xC, 0, 0xE8, 0x01, 0,0,0,0, 1,0,0,0]);
     }
 }
